@@ -6,18 +6,18 @@ ext {
     ]
 
     android = [
-            applicationId: "kr.co.helicopark.simplegallery",
+            applicationId: "kr.co.helicopark.simplepermission",
             compileSdk   : 30,
             minSdk       : 16,
             targetSdk    : 30,
 
-            versionCode  : 2,
-            versionName  : "1.0.2",
+            versionCode  : 3,
+            versionName  : "1.0.3",
     ]
 
     dependencies = [
             appcompat: 'androidx.appcompat:appcompat:1.3.1',
-            ktx      : 'androidx.core:core-ktx:1.7.0',
+            ktx      : 'androidx.core:core-ktx:1.6.0',
             rxandroid: 'io.reactivex.rxjava3:rxandroid:3.0.0',
             rxjava   : 'io.reactivex.rxjava3:rxjava:3.0.6',
             rxkotlin : 'io.reactivex.rxjava3:rxkotlin:3.0.0',
