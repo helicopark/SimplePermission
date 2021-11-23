@@ -9,7 +9,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kr.co.helicopark.permission.listener.OnPermissionListener
 
 
-class PermissionRequestManager(@NonNull val permissions: Array<out String>) {
+class PermissionRequestManager(@NonNull private val permissions: Array<out String>) {
     private var onPermissionListener: OnPermissionListener? = null
 
     private val permissionResultBroadcastReceiver: PermissionResultBroadcastReceiver by lazy {
@@ -30,7 +30,7 @@ class PermissionRequestManager(@NonNull val permissions: Array<out String>) {
         }
     }
 
-    inner class PermissionResultBroadcastReceiver : BroadcastReceiver() {
+    private inner class PermissionResultBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
                 PERMISSION_RESULT_BROADCAST -> {
