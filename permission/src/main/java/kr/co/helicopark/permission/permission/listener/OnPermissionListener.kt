@@ -1,4 +1,4 @@
-package kr.co.helicopark.permission.listener
+package kr.co.helicopark.permission.permission.listener
 
 import androidx.annotation.NonNull
 
