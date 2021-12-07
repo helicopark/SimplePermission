@@ -8,7 +8,8 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/btn_test"
+        android:id="@+id/btn_common"
+        android:text="common"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -23,10 +24,67 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_background_location"
+        android:id="@+id/btn_background_location_basic_string"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="background"
+        android:text="background_string"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_basic_res"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="background_res"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_custom_dialog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="custom background_dialog"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <Button
+        android:id="@+id/btn_background_location_custom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="custom background"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_custom_x"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="custom background_X"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_custom_x_create"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="custom background_X_create"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_custom_create"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="custom background_create"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_background_location_no_need"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="no need dialog background"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

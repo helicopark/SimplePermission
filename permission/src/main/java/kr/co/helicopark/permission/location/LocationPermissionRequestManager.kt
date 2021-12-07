@@ -1,22 +1,37 @@
 package kr.co.helicopark.permission.location
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.AlertDialog
+import android.app.Dialog
+import android.content.*
+import android.content.pm.PackageManager
 import android.os.Build
+import android.text.TextUtils
+import android.view.View
 import androidx.annotation.CheckResult
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kr.co.helicopark.permission.*
 import kr.co.helicopark.permission.PERMISSION_DENIED
 import kr.co.helicopark.permission.PERMISSION_GRANTED
 import kr.co.helicopark.permission.COMMON_PERMISSION_BROADCAST_RECEIVER
+import kr.co.helicopark.permission.location.background.BackgroundLocationDescriptionDialogRequestManager
 import kr.co.helicopark.permission.permission.listener.OnPermissionListener
 import kr.co.helicopark.permission.permission.PermissionRequestManager
 
 class LocationPermissionRequestManager : PermissionRequestManager() {
     override var onPermissionListener: OnPermissionListener? = null
     private var hasBackgroundPermission: Boolean = false
+
+    private var backgroundLocationDescriptionDialog: AlertDialog.Builder? = null
+
+    internal var backgroundLocationDescriptionDialogTitle: String? = null
+    internal var backgroundLocationDescriptionDialogMessage: String? = null
+    internal var backgroundLocationDescriptionDialogStringResTitle: Int? = null
+    internal var backgroundLocationDescriptionDialogStringResMessage: Int? = null
+
+    internal var customBackgroundLocationDescriptionDialog: Dialog? = null
+    internal var customBackgroundLocationDescriptionDialogPositiveButton: View? = null
+
+    private var context: Context? = null
 
     private val locationPermissionResultBroadcastReceiver: LocationPermissionResultBroadcastReceiver by lazy {
         LocationPermissionResultBroadcastReceiver()
@@ -26,35 +41,89 @@ class LocationPermissionRequestManager : PermissionRequestManager() {
         BackgroundLocationPermissionResultBroadcastReceiver()
     }
 
-   override fun onPermissionListener(onPermissionListener: OnPermissionListener): PermissionRequestManager {
+    override fun onPermissionListener(onPermissionListener: OnPermissionListener): PermissionRequestManager {
         this.onPermissionListener = onPermissionListener
         return this@LocationPermissionRequestManager
     }
 
     override fun start(context: Context) {
+        this.context = context
+
         LocalBroadcastManager.getInstance(context)
             .registerReceiver(locationPermissionResultBroadcastReceiver, IntentFilter(COMMON_PERMISSION_BROADCAST_RECEIVER))
 
+        val permissions = arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)
+        if (hasBackgroundPermission && Build.VERSION.SDK_INT == Build.VERSION_CODES.P) {
+            permissions.plus(ACCESS_BACKGROUND_LOCATION)
+        }
+
         Intent(context, LocationPermissionActivity::class.java).let {
             it.putExtra("broadcast", COMMON_PERMISSION_BROADCAST_RECEIVER)
-            it.putExtra("permissions", arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION))
+            it.putExtra("permissions", permissions)
             it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(it)
         }
     }
 
-    @CheckResult(suggest = "start()")
-    fun backgroundPermission(hasBackgroundPermission: Boolean): LocationPermissionRequestManager {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            this.hasBackgroundPermission = hasBackgroundPermission
-        } else {
-            this.hasBackgroundPermission = false
-        }
+    private fun showBackgroundLocationDescriptionDialog() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (customBackgroundLocationDescriptionDialog != null) {
+                customBackgroundLocationDescriptionDialogPositiveButton!!.setOnClickListener {
+                    requestBackgroundLocationPermission(context!!)
+                }
 
-        return this@LocationPermissionRequestManager
+                customBackgroundLocationDescriptionDialog!!.show()
+                return
+            }
+
+            if (!TextUtils.isEmpty(backgroundLocationDescriptionDialogTitle) && !TextUtils.isEmpty(backgroundLocationDescriptionDialogMessage)) {
+                backgroundLocationDescriptionDialog = AlertDialog.Builder(context)
+                backgroundLocationDescriptionDialog!!.setTitle(backgroundLocationDescriptionDialogTitle)
+                backgroundLocationDescriptionDialog!!.setMessage(backgroundLocationDescriptionDialogMessage)
+                backgroundLocationDescriptionDialog!!.setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        requestBackgroundLocationPermission(context!!)
+                    }
+                })
+
+                backgroundLocationDescriptionDialog!!.setNegativeButton(android.R.string.cancel, object : DialogInterface.OnClickListener {
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        onPermissionListener?.onPermissionGranted(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION))
+                        onPermissionListener?.onPermissionDenied(arrayOf(ACCESS_BACKGROUND_LOCATION))
+                    }
+                })
+
+                backgroundLocationDescriptionDialog!!.show()
+                return
+            }
+
+            if (backgroundLocationDescriptionDialogStringResTitle != null && backgroundLocationDescriptionDialogStringResMessage != null) {
+                backgroundLocationDescriptionDialog = AlertDialog.Builder(context)
+                backgroundLocationDescriptionDialog!!.setTitle(backgroundLocationDescriptionDialogStringResTitle!!)
+                backgroundLocationDescriptionDialog!!.setMessage(backgroundLocationDescriptionDialogStringResMessage!!)
+                backgroundLocationDescriptionDialog!!.setPositiveButton(android.R.string.ok, object : DialogInterface.OnClickListener {
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        requestBackgroundLocationPermission(context!!)
+                    }
+                })
+
+                backgroundLocationDescriptionDialog!!.setNegativeButton(android.R.string.cancel, object : DialogInterface.OnClickListener {
+                    override fun onClick(dialog: DialogInterface?, which: Int) {
+                        onPermissionListener?.onPermissionGranted(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION))
+                        onPermissionListener?.onPermissionDenied(arrayOf(ACCESS_BACKGROUND_LOCATION))
+                    }
+                })
+
+                backgroundLocationDescriptionDialog!!.show()
+                return
+            }
+
+            onPermissionListener?.onPermissionDenied(arrayOf(ACCESS_BACKGROUND_LOCATION))
+            throw IllegalArgumentException("if your api is 30 or upper and you want use access background location, you need to show dialog explaining why you are using it")
+        }
     }
 
-    private fun requestBackgroundPermission(context: Context) {
+    private fun requestBackgroundLocationPermission(context: Context) {
         LocalBroadcastManager.getInstance(context)
             .registerReceiver(backgroundLocationPermissionResultBroadcastReceiver, IntentFilter(BACKGROUND_LOCATION_PERMISSION_BROADCAST_RECEIVER))
 
@@ -64,6 +133,13 @@ class LocationPermissionRequestManager : PermissionRequestManager() {
             it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(it)
         }
+    }
+
+    @CheckResult(suggest = "BackgroundLocationDescriptionDialog()")
+    fun backgroundLocationPermission(): BackgroundLocationDescriptionDialogRequestManager {
+        this.hasBackgroundPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+
+        return BackgroundLocationDescriptionDialogRequestManager(this)
     }
 
     private inner class LocationPermissionResultBroadcastReceiver : BroadcastReceiver() {
@@ -76,22 +152,21 @@ class LocationPermissionRequestManager : PermissionRequestManager() {
                         if (!hasBackgroundPermission) {
                             onPermissionListener?.onPermissionGranted(permissions)
                         } else {
-                            if (permissions[0].equals(ACCESS_FINE_LOCATION) or permissions[0].equals(ACCESS_COARSE_LOCATION)) {
-                                requestBackgroundPermission(context)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                if (context.checkSelfPermission(ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                    onPermissionListener?.onPermissionGranted(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION))
+                                } else {
+                                    showBackgroundLocationDescriptionDialog()
+                                }
                             } else {
-                                onPermissionListener?.onPermissionGranted(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION))
+                                onPermissionListener?.onPermissionGranted(permissions)
                             }
                         }
                     }
 
                     if (intent.hasExtra(PERMISSION_DENIED)) {
                         val permissions = intent.getStringArrayListExtra(PERMISSION_DENIED)!!.toTypedArray()
-
-                        if (!hasBackgroundPermission) {
-                            onPermissionListener?.onPermissionDenied(permissions)
-                        } else {
-                            onPermissionListener?.onPermissionDenied(arrayOf(ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION))
-                        }
+                        onPermissionListener?.onPermissionDenied(permissions)
                     }
 
                     LocalBroadcastManager.getInstance(context).unregisterReceiver(locationPermissionResultBroadcastReceiver)

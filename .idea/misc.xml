@@ -5,6 +5,7 @@
       <map>
         <entry key="permission/src/main/res/layout/activity_permission.xml" value="0.296195652173913" />
         <entry key="sample/src/main/res/layout/activity_main.xml" value="0.296195652173913" />
+        <entry key="sample/src/main/res/layout/dialog_background_location.xml" value="0.23020833333333332" />
       </map>
     </option>
   </component>
